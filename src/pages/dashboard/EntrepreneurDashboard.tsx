@@ -10,32 +10,69 @@ import { useAuth } from '../../context/AuthContext';
 import { CollaborationRequest } from '../../types';
 import { getRequestsForEntrepreneur } from '../../data/collaborationRequests';
 import { investors } from '../../data/users';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+
+interface Event {
+  title: string;
+  date: string;
+  status?: 'confirmed' | 'pending';
+}
 
 export const EntrepreneurDashboard: React.FC = () => {
   const { user } = useAuth();
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
-  
+  const [events, setEvents] = useState<Event[]>([]);
+
   useEffect(() => {
     if (user) {
-      // Load collaboration requests
       const requests = getRequestsForEntrepreneur(user.id);
       setCollaborationRequests(requests);
+      const confirmedEvents = requests
+        .filter(req => req.status === 'accepted')
+        .map(req => ({
+          title: `Meeting with ${req.investorName}`,
+          date: new Date().toISOString().split('T')[0],
+          status: 'confirmed' as const,
+        }));
+      setEvents(confirmedEvents);
     }
   }, [user]);
-  
+
   const handleRequestStatusUpdate = (requestId: string, status: 'accepted' | 'rejected') => {
-    setCollaborationRequests(prevRequests => 
-      prevRequests.map(req => 
-        req.id === requestId ? { ...req, status } : req
-      )
+    setCollaborationRequests(prevRequests =>
+      prevRequests.map(req => (req.id === requestId ? { ...req, status } : req))
     );
+    if (status === 'accepted') {
+      const updatedRequest = collaborationRequests.find(req => req.id === requestId);
+      if (updatedRequest) {
+        setEvents([...events, {
+          title: `Meeting with ${updatedRequest.investorName}`,
+          date: new Date().toISOString().split('T')[0],
+          status: 'confirmed',
+        }]);
+      }
+    }
   };
-  
+
+  const handleDateClick = (arg: { dateStr: string }) => {
+    const title = prompt('Enter meeting title:');
+    if (title) {
+      setEvents([...events, { title, date: arg.dateStr, status: 'pending' as const }]);
+    }
+  };
+
+  const handleSendRequest = () => alert('Meeting Request Sent');
+  const handleAccept = () => alert('Meeting Accepted');
+  const handleDecline = () => alert('Meeting Declined');
+
   if (!user) return null;
-  
+
   const pendingRequests = collaborationRequests.filter(req => req.status === 'pending');
-  
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -43,17 +80,11 @@ export const EntrepreneurDashboard: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}</h1>
           <p className="text-gray-600">Here's what's happening with your startup today</p>
         </div>
-        
         <Link to="/investors">
-          <Button
-            leftIcon={<PlusCircle size={18} />}
-          >
-            Find Investors
-          </Button>
+          <Button leftIcon={<PlusCircle size={18} />}>Find Investors</Button>
         </Link>
       </div>
-      
-      {/* Summary cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-primary-50 border border-primary-100">
           <CardBody>
@@ -68,7 +99,6 @@ export const EntrepreneurDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        
         <Card className="bg-secondary-50 border border-secondary-100">
           <CardBody>
             <div className="flex items-center">
@@ -84,7 +114,6 @@ export const EntrepreneurDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        
         <Card className="bg-accent-50 border border-accent-100">
           <CardBody>
             <div className="flex items-center">
@@ -93,12 +122,11 @@ export const EntrepreneurDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-accent-700">Upcoming Meetings</p>
-                <h3 className="text-xl font-semibold text-accent-900">2</h3>
+                <h3 className="text-xl font-semibold text-accent-900">{events.length}</h3>
               </div>
             </div>
           </CardBody>
         </Card>
-        
         <Card className="bg-success-50 border border-success-100">
           <CardBody>
             <div className="flex items-center">
@@ -113,16 +141,14 @@ export const EntrepreneurDashboard: React.FC = () => {
           </CardBody>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Collaboration requests */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Collaboration Requests</h2>
               <Badge variant="primary">{pendingRequests.length} pending</Badge>
             </CardHeader>
-            
             <CardBody>
               {collaborationRequests.length > 0 ? (
                 <div className="space-y-4">
@@ -146,8 +172,7 @@ export const EntrepreneurDashboard: React.FC = () => {
             </CardBody>
           </Card>
         </div>
-        
-        {/* Recommended investors */}
+
         <div className="space-y-4">
           <Card>
             <CardHeader className="flex justify-between items-center">
@@ -156,7 +181,6 @@ export const EntrepreneurDashboard: React.FC = () => {
                 View all
               </Link>
             </CardHeader>
-            
             <CardBody className="space-y-4">
               {recommendedInvestors.map(investor => (
                 <InvestorCard
@@ -169,6 +193,33 @@ export const EntrepreneurDashboard: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-medium text-gray-900">Meeting Schedule</h2>
+        </CardHeader>
+        <CardBody>
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            events={events}
+            dateClick={handleDateClick}
+            eventContent={(eventInfo) => (
+              <div>
+                <b>{eventInfo.event.title}</b>
+                <p>{eventInfo.event.extendedProps.status}</p>
+              </div>
+            )}
+          />
+          <div className="mt-4 space-x-2">
+            <Button onClick={handleSendRequest}>Send Request</Button>
+            <Button onClick={handleAccept}>Accept</Button>
+            <Button onClick={handleDecline}>Decline</Button>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   );
 };
+
+export default EntrepreneurDashboard;
