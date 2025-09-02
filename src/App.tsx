@@ -30,6 +30,9 @@ import { DealsPage } from './pages/deals/DealsPage';
 // Chat Pages
 import { ChatPage } from './pages/chat/ChatPage';
 
+// Video Call Page
+import VideoCallPage from './pages/video-call/VideoCallPage'; // Default import
+
 function App() {
   return (
     <AuthProvider>
@@ -82,6 +85,11 @@ function App() {
           
           <Route path="/deals" element={<DashboardLayout />}>
             <Route index element={<DealsPage />} />
+          </Route>
+          
+          {/* Video Call Route */}
+          <Route path="/video-call" element={<DashboardLayout />}>
+            <Route index element={<VideoCallPage />} />
           </Route>
           
           {/* Chat Routes */}
