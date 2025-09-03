@@ -6,6 +6,16 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { UserRole } from '../../types';
 
+// Define a basic type for PasswordStrengthMeter since @types is missing
+interface PasswordStrengthMeterProps {
+  password: string;
+}
+
+declare module 'password-strength-meter' {
+  const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps>;
+  export default PasswordStrengthMeter;
+}
+
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,7 +42,6 @@ export const RegisterPage: React.FC = () => {
     
     try {
       await register(name, email, password, role);
-      // Redirect based on user role
       navigate(role === 'entrepreneur' ? '/dashboard/entrepreneur' : '/dashboard/investor');
     } catch (err) {
       setError((err as Error).message);
@@ -142,6 +151,10 @@ export const RegisterPage: React.FC = () => {
               startAdornment={<Lock size={18} />}
             />
             
+            <div className="space-y-2">
+              <PasswordStrengthMeter password={password} /> {/* Should now work with basic type */}
+            </div>
+            
             <div className="flex items-center">
               <input
                 id="terms"
@@ -195,3 +208,5 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 };
+
+export default RegisterPage;

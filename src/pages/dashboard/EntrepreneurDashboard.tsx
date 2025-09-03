@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle } from 'lucide-react';
+import { Users, Bell, Calendar, TrendingUp, AlertCircle, PlusCircle, DollarSign } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -14,6 +14,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import Joyride from 'react-joyride'; // For walkthrough
 
 interface Event {
   title: string;
@@ -26,6 +27,9 @@ export const EntrepreneurDashboard: React.FC = () => {
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
   const [events, setEvents] = useState<Event[]>([]);
+  const [walletBalance, setWalletBalance] = useState(1000); // Mock wallet balance
+  const [transactions, setTransactions] = useState<any[]>([]); // Mock transactions
+  const [runWalkthrough, setRunWalkthrough] = useState(true); // For Joyride
 
   useEffect(() => {
     if (user) {
@@ -36,7 +40,7 @@ export const EntrepreneurDashboard: React.FC = () => {
         .map(req => ({
           title: `Meeting with ${req.investorName}`,
           date: new Date().toISOString().split('T')[0],
-          status: 'confirmed' as const,
+          status: 'confirmed',
         }));
       setEvents(confirmedEvents);
     }
@@ -61,20 +65,68 @@ export const EntrepreneurDashboard: React.FC = () => {
   const handleDateClick = (arg: { dateStr: string }) => {
     const title = prompt('Enter meeting title:');
     if (title) {
-      setEvents([...events, { title, date: arg.dateStr, status: 'pending' as const }]);
+      setEvents([...events, { title, date: arg.dateStr, status: 'pending' }]);
     }
   };
 
-  const handleSendRequest = () => alert('Meeting Request Sent');
-  const handleAccept = () => alert('Meeting Accepted');
-  const handleDecline = () => alert('Meeting Declined');
+  const handleFunding = (amount: number) => {
+    if (amount > 0 && amount <= walletBalance) {
+      setWalletBalance(walletBalance - amount);
+      setTransactions([...transactions, {
+        id: Date.now().toString(),
+        amount: -amount,
+        sender: 'Investor',
+        receiver: user.name,
+        status: 'Completed',
+        date: new Date().toLocaleDateString(),
+      }]);
+      alert('Funding received (mock)');
+    } else {
+      alert('Insufficient balance or invalid amount');
+    }
+  };
+
+  // Define missing handler functions
+  const handleSendRequest = () => {
+    // Mock implementation: Add a new pending request
+    const newRequest: CollaborationRequest = {
+      id: Date.now().toString(),
+      entrepreneurId: user.id,
+      entrepreneurName: user.name,
+      investorId: recommendedInvestors[0].id, // Use first recommended investor as mock
+      investorName: recommendedInvestors[0].name,
+      status: 'pending',
+      pitchSummary: 'New pitch summary',
+      dateRequested: new Date().toISOString(),
+    };
+    setCollaborationRequests([...collaborationRequests, newRequest]);
+    alert('Request sent (mock)');
+  };
+
+  const handleAccept = (requestId: string) => {
+    handleRequestStatusUpdate(requestId, 'accepted');
+    alert('Request accepted (mock)');
+  };
+
+  const handleDecline = (requestId: string) => {
+    handleRequestStatusUpdate(requestId, 'rejected');
+    alert('Request declined (mock)');
+  };
+
+  const steps = [
+    { target: '.card-requests', content: 'View your collaboration requests here.' },
+    { target: '.card-investors', content: 'Check recommended investors.' },
+    { target: '.card-calendar', content: 'Manage your meeting schedule.' },
+    { target: '.card-wallet', content: 'Track your wallet balance and funding.' },
+  ];
 
   if (!user) return null;
 
   const pendingRequests = collaborationRequests.filter(req => req.status === 'pending');
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 p-6 animate-fade-in">
+      <Joyride steps={steps} run={runWalkthrough} continuous={true} callback={() => setRunWalkthrough(false)} />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}</h1>
@@ -86,7 +138,7 @@ export const EntrepreneurDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-primary-50 border border-primary-100">
+        <Card className="bg-primary-50 border border-primary-100 card-requests">
           <CardBody>
             <div className="flex items-center">
               <div className="p-3 bg-primary-100 rounded-full mr-4">
@@ -114,7 +166,7 @@ export const EntrepreneurDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        <Card className="bg-accent-50 border border-accent-100">
+        <Card className="bg-accent-50 border border-accent-100 card-calendar">
           <CardBody>
             <div className="flex items-center">
               <div className="p-3 bg-accent-100 rounded-full mr-4">
@@ -127,15 +179,15 @@ export const EntrepreneurDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        <Card className="bg-success-50 border border-success-100">
+        <Card className="bg-success-50 border border-success-100 card-wallet">
           <CardBody>
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-full mr-4">
-                <TrendingUp size={20} className="text-success-700" />
+              <div className="p-3 bg-success-100 rounded-full mr-4">
+                <DollarSign size={20} className="text-success-700" />
               </div>
               <div>
-                <p className="text-sm font-medium text-success-700">Profile Views</p>
-                <h3 className="text-xl font-semibold text-success-900">24</h3>
+                <p className="text-sm font-medium text-success-700">Wallet Balance</p>
+                <h3 className="text-xl font-semibold text-success-900">${walletBalance}</h3>
               </div>
             </div>
           </CardBody>
@@ -174,7 +226,7 @@ export const EntrepreneurDashboard: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          <Card>
+          <Card className="card-investors">
             <CardHeader className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Recommended Investors</h2>
               <Link to="/investors" className="text-sm font-medium text-primary-600 hover:text-primary-500">
@@ -194,7 +246,7 @@ export const EntrepreneurDashboard: React.FC = () => {
         </div>
       </div>
 
-      <Card>
+      <Card className="card-calendar">
         <CardHeader>
           <h2 className="text-lg font-medium text-gray-900">Meeting Schedule</h2>
         </CardHeader>
@@ -212,9 +264,10 @@ export const EntrepreneurDashboard: React.FC = () => {
             )}
           />
           <div className="mt-4 space-x-2">
-            <Button onClick={handleSendRequest}>Send Request</Button>
-            <Button onClick={handleAccept}>Accept</Button>
-            <Button onClick={handleDecline}>Decline</Button>
+            <Button onClick={handleSendRequest}>Send Request</Button> {/* Now defined */}
+            <Button onClick={() => handleAccept('mock-id')}>Accept</Button> {/* Mock ID for demo */}
+            <Button onClick={() => handleDecline('mock-id')}>Decline</Button> {/* Mock ID for demo */}
+            <Button onClick={() => handleFunding(100)}>Request Funding</Button>
           </div>
         </CardBody>
       </Card>

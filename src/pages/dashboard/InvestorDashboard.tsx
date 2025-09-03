@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, PieChart, Filter, Search, PlusCircle } from 'lucide-react';
+import { Users, PieChart, Filter, Search, PlusCircle, DollarSign } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -14,6 +14,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import Joyride from 'react-joyride'; // For walkthrough
 
 interface Event {
   title: string;
@@ -28,8 +29,9 @@ export const InvestorDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([
     { title: 'Sample Meeting', date: '2025-09-01T10:00:00', status: 'confirmed' },
   ]);
-
-  if (!user) return null;
+  const [walletBalance, setWalletBalance] = useState(5000); // Mock wallet balance
+  const [transactions, setTransactions] = useState<any[]>([]); // Mock transactions
+  const [runWalkthrough, setRunWalkthrough] = useState(true); // For Joyride
 
   const sentRequests = getRequestsFromInvestor(user.id);
   const requestedEntrepreneurIds = sentRequests.map(req => req.entrepreneurId);
@@ -44,7 +46,7 @@ export const InvestorDashboard: React.FC = () => {
     const matchesIndustry = selectedIndustries.length === 0 ||
       selectedIndustries.includes(entrepreneur.industry);
     
-    return matchesSearch && matchesIndustry;
+    return matchesSearch && matchesIndustry && !requestedEntrepreneurIds.includes(entrepreneur.id);
   });
 
   const industries = Array.from(new Set(entrepreneurs.map(e => e.industry)));
@@ -60,16 +62,39 @@ export const InvestorDashboard: React.FC = () => {
   const handleDateClick = (arg: { dateStr: string }) => {
     const title = prompt('Enter meeting title:');
     if (title) {
-      setEvents([...events, { title, date: arg.dateStr, status: 'pending' as const }]);
+      setEvents([...events, { title, date: arg.dateStr, status: 'pending' }]);
     }
   };
 
-  const handleSendRequest = () => alert('Meeting Request Sent');
-  const handleAccept = () => alert('Meeting Accepted');
-  const handleDecline = () => alert('Meeting Declined');
+  const handleFunding = (amount: number, entrepreneurName: string) => {
+    if (amount > 0 && amount <= walletBalance) {
+      setWalletBalance(walletBalance - amount);
+      setTransactions([...transactions, {
+        id: Date.now().toString(),
+        amount: -amount,
+        sender: user.name,
+        receiver: entrepreneurName,
+        status: 'Completed',
+        date: new Date().toLocaleDateString(),
+      }]);
+      alert(`Funding ${amount} sent to ${entrepreneurName} (mock)`);
+    } else {
+      alert('Insufficient balance or invalid amount');
+    }
+  };
+
+  const steps = [
+    { target: '.card-startups', content: 'Discover startups to invest in.' },
+    { target: '.card-industries', content: 'Filter by industries.' },
+    { target: '.card-connections', content: 'Track your connections.' },
+    { target: '.card-wallet', content: 'Manage your wallet and fund deals.' },
+  ];
+
+  if (!user) return null;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 p-6 animate-fade-in">
+      <Joyride steps={steps} run={runWalkthrough} continuous={true} callback={() => setRunWalkthrough(false)} />
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Discover Startups</h1>
@@ -110,8 +135,8 @@ export const InvestorDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-primary-50 border border-primary-100">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-primary-50 border border-primary-100 card-startups">
           <CardBody>
             <div className="flex items-center">
               <div className="p-3 bg-primary-100 rounded-full mr-4">
@@ -124,7 +149,7 @@ export const InvestorDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        <Card className="bg-secondary-50 border border-secondary-100">
+        <Card className="bg-secondary-50 border border-secondary-100 card-industries">
           <CardBody>
             <div className="flex items-center">
               <div className="p-3 bg-secondary-100 rounded-full mr-4">
@@ -137,7 +162,7 @@ export const InvestorDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        <Card className="bg-accent-50 border border-accent-100">
+        <Card className="bg-accent-50 border border-accent-100 card-connections">
           <CardBody>
             <div className="flex items-center">
               <div className="p-3 bg-accent-100 rounded-full mr-4">
@@ -148,6 +173,19 @@ export const InvestorDashboard: React.FC = () => {
                 <h3 className="text-xl font-semibold text-accent-900">
                   {sentRequests.filter(req => req.status === 'accepted').length}
                 </h3>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+        <Card className="bg-success-50 border border-success-100 card-wallet">
+          <CardBody>
+            <div className="flex items-center">
+              <div className="p-3 bg-success-100 rounded-full mr-4">
+                <DollarSign size={20} className="text-success-700" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-success-700">Wallet Balance</p>
+                <h3 className="text-xl font-semibold text-success-900">${walletBalance}</h3>
               </div>
             </div>
           </CardBody>
@@ -166,6 +204,7 @@ export const InvestorDashboard: React.FC = () => {
                   <EntrepreneurCard
                     key={entrepreneur.id}
                     entrepreneur={entrepreneur}
+                    onFund={(amount) => handleFunding(amount, entrepreneur.name)}
                   />
                 ))}
               </div>
@@ -188,7 +227,7 @@ export const InvestorDashboard: React.FC = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="card-calendar">
         <CardHeader>
           <h2 className="text-lg font-medium text-gray-900">Meeting Schedule</h2>
         </CardHeader>
