@@ -5,8 +5,9 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 
 export const DashboardLayout: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  
+  const { user, isLoading } = useAuth(); // Use user presence for auth check, isLoading for spinner
+
+  // Show loading spinner while auth state is being determined
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -14,11 +15,13 @@ export const DashboardLayout: React.FC = () => {
       </div>
     );
   }
-  
-  if (!isAuthenticated) {
+
+  // Redirect to login if no user (not authenticated)
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
+  // Render dashboard layout for authenticated users
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />

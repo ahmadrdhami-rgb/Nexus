@@ -14,7 +14,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import Joyride from 'react-joyride'; // For walkthrough
+import Joyride from 'react-joyride';
 
 interface Event {
   title: string;
@@ -27,14 +27,26 @@ export const EntrepreneurDashboard: React.FC = () => {
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
   const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
   const [events, setEvents] = useState<Event[]>([]);
-  const [walletBalance, setWalletBalance] = useState(1000); // Mock wallet balance
-  const [transactions, setTransactions] = useState<any[]>([]); // Mock transactions
-  const [runWalkthrough, setRunWalkthrough] = useState(true); // For Joyride
+  const [walletBalance, setWalletBalance] = useState(1000);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [runWalkthrough, setRunWalkthrough] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      const requests = getRequestsForEntrepreneur(user.id);
-      setCollaborationRequests(requests);
+    if (user && user.id) {
+      // Ensure requests are fetched with dummy data if none
+      const requests = getRequestsForEntrepreneur(user.id) || [];
+      setCollaborationRequests(requests.length ? requests : [
+        {
+          id: 'req1',
+          entrepreneurId: user.id,
+          entrepreneurName: user.name,
+          investorId: 'inv1',
+          investorName: 'John Doe',
+          status: 'pending',
+          pitchSummary: 'Initial pitch for tech startup',
+          dateRequested: new Date().toISOString(),
+        },
+      ]);
       const confirmedEvents = requests
         .filter(req => req.status === 'accepted')
         .map(req => ({
@@ -86,14 +98,12 @@ export const EntrepreneurDashboard: React.FC = () => {
     }
   };
 
-  // Define missing handler functions
   const handleSendRequest = () => {
-    // Mock implementation: Add a new pending request
     const newRequest: CollaborationRequest = {
       id: Date.now().toString(),
       entrepreneurId: user.id,
       entrepreneurName: user.name,
-      investorId: recommendedInvestors[0].id, // Use first recommended investor as mock
+      investorId: recommendedInvestors[0].id,
       investorName: recommendedInvestors[0].name,
       status: 'pending',
       pitchSummary: 'New pitch summary',
@@ -103,15 +113,8 @@ export const EntrepreneurDashboard: React.FC = () => {
     alert('Request sent (mock)');
   };
 
-  const handleAccept = (requestId: string) => {
-    handleRequestStatusUpdate(requestId, 'accepted');
-    alert('Request accepted (mock)');
-  };
-
-  const handleDecline = (requestId: string) => {
-    handleRequestStatusUpdate(requestId, 'rejected');
-    alert('Request declined (mock)');
-  };
+  const handleAccept = (requestId: string) => handleRequestStatusUpdate(requestId, 'accepted');
+  const handleDecline = (requestId: string) => handleRequestStatusUpdate(requestId, 'rejected');
 
   const steps = [
     { target: '.card-requests', content: 'View your collaboration requests here.' },
@@ -120,7 +123,7 @@ export const EntrepreneurDashboard: React.FC = () => {
     { target: '.card-wallet', content: 'Track your wallet balance and funding.' },
   ];
 
-  if (!user) return null;
+  if (!user) return <div>Loading...</div>; // Show loading instead of null
 
   const pendingRequests = collaborationRequests.filter(req => req.status === 'pending');
 
@@ -264,9 +267,9 @@ export const EntrepreneurDashboard: React.FC = () => {
             )}
           />
           <div className="mt-4 space-x-2">
-            <Button onClick={handleSendRequest}>Send Request</Button> {/* Now defined */}
-            <Button onClick={() => handleAccept('mock-id')}>Accept</Button> {/* Mock ID for demo */}
-            <Button onClick={() => handleDecline('mock-id')}>Decline</Button> {/* Mock ID for demo */}
+            <Button onClick={handleSendRequest}>Send Request</Button>
+            <Button onClick={() => handleAccept('req1')}>Accept</Button>
+            <Button onClick={() => handleDecline('req1')}>Decline</Button>
             <Button onClick={() => handleFunding(100)}>Request Funding</Button>
           </div>
         </CardBody>

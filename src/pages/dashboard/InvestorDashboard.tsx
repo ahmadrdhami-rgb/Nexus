@@ -14,7 +14,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import Joyride from 'react-joyride'; // For walkthrough
+import Joyride from 'react-joyride';
 
 interface Event {
   title: string;
@@ -29,11 +29,11 @@ export const InvestorDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([
     { title: 'Sample Meeting', date: '2025-09-01T10:00:00', status: 'confirmed' },
   ]);
-  const [walletBalance, setWalletBalance] = useState(5000); // Mock wallet balance
-  const [transactions, setTransactions] = useState<any[]>([]); // Mock transactions
-  const [runWalkthrough, setRunWalkthrough] = useState(true); // For Joyride
+  const [walletBalance, setWalletBalance] = useState(5000);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [runWalkthrough, setRunWalkthrough] = useState(true);
 
-  const sentRequests = getRequestsFromInvestor(user.id);
+  const sentRequests = getRequestsFromInvestor(user?.id || '');
   const requestedEntrepreneurIds = sentRequests.map(req => req.entrepreneurId);
 
   const filteredEntrepreneurs = entrepreneurs.filter(entrepreneur => {
