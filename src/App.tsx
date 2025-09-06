@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
 // Auth Pages
-import { LoginPage } from './pages/auth/LoginPage'; // Import, don't redefine
+import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 
 // Dashboard Pages
@@ -35,7 +35,7 @@ import { ChatPage } from './pages/chat/ChatPage';
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div>Loading...</div>; // Prevent redirect during loading
+  if (isLoading) return <div>Loading...</div>;
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -48,7 +48,7 @@ function App() {
       <Router>
         <Routes>
           {/* Authentication Routes */}
-          <Route path="/login" element={<LoginPage />} /> {/* Use imported component */}
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
           {/* Dashboard Routes */}
@@ -72,8 +72,13 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* Remove /payments from here - it's now a separate route */}
+          </Route>
+          
+          {/* Payments Route - Fixed to root level with DashboardLayout */}
+          <Route path="/payments" element={<DashboardLayout />}>
             <Route
-              path="payments"
+              index
               element={
                 <ProtectedRoute>
                   <PaymentsPage />

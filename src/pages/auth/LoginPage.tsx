@@ -10,12 +10,12 @@ import OtpInput from 'react-otp-input';
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('entrepreneur'); // Fixed to entrepreneur
+  const [role, setRole] = useState<UserRole>('entrepreneur');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +31,8 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login(email, password, role, otp);
-      navigate('/dashboard/entrepreneur'); // Always go to entrepreneur dashboard
+      console.log("After login, user:", user); // Check user state
+      navigate('/dashboard/entrepreneur');
     } catch (err) {
       setError((err as Error).message);
       setIsLoading(false);

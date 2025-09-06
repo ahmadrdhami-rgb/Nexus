@@ -35,12 +35,11 @@ export const Sidebar: React.FC = () => {
   
   if (!user) return null;
   
-  // Define sidebar items based on user role with Payments added
   const entrepreneurItems = [
     { to: '/dashboard/entrepreneur', icon: <Home size={20} />, text: 'Dashboard' },
     { to: '/profile/entrepreneur/' + user.id, icon: <Building2 size={20} />, text: 'My Startup' },
     { to: '/investors', icon: <CircleDollarSign size={20} />, text: 'Find Investors' },
-    { to: '/payments', icon: <DollarSign size={20} />, text: 'Payments' }, // New Payments item
+    { to: '/payments', icon: <DollarSign size={20} />, text: 'Payments' },
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages' },
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications' },
     { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
@@ -51,7 +50,7 @@ export const Sidebar: React.FC = () => {
     { to: '/dashboard/investor', icon: <Home size={20} />, text: 'Dashboard' },
     { to: '/profile/investor/' + user.id, icon: <CircleDollarSign size={20} />, text: 'My Portfolio' },
     { to: '/entrepreneurs', icon: <Users size={20} />, text: 'Find Startups' },
-    { to: '/payments', icon: <DollarSign size={20} />, text: 'Payments' }, // New Payments item
+    { to: '/payments', icon: <DollarSign size={20} />, text: 'Payments' },
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages' },
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications' },
     { to: '/deals', icon: <FileText size={20} />, text: 'Deals' },
@@ -60,7 +59,6 @@ export const Sidebar: React.FC = () => {
   
   const sidebarItems = user.role === 'entrepreneur' ? entrepreneurItems : investorItems;
   
-  // Common items at the bottom
   const commonItems = [
     { to: '/settings', icon: <Settings size={20} />, text: 'Settings' },
     { to: '/help', icon: <HelpCircle size={20} />, text: 'Help & Support' },

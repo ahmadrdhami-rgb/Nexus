@@ -1,19 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole } from '../types';
 
 const mockUsers = {
-  entrepreneur: {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah@techwave.io',
-    role: 'entrepreneur' as UserRole,
-  },
-  investor: {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'michael@vcinnovate.com',
-    role: 'investor' as UserRole,
-  },
+  entrepreneur: { id: '1', name: 'Sarah Johnson', email: 'sarah@techwave.io', role: 'entrepreneur' as UserRole },
+  investor: { id: '2', name: 'Michael Chen', email: 'michael@vcinnovate.com', role: 'investor' as UserRole },
 };
 
 interface AuthContextType {
@@ -27,11 +17,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('mockUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setIsLoading(false);
+  }, []);
 
   const login = async (email: string, password: string, role: UserRole, otp?: string) => {
     setIsLoading(true);
-    // Mock login: Accept demo credentials and any 6-digit OTP
     if (
       (role === 'entrepreneur' && email === 'sarah@techwave.io' && password === 'password123' && otp?.length === 6) ||
       (role === 'investor' && email === 'michael@vcinnovate.com' && password === 'password123' && otp?.length === 6)
@@ -59,8 +56,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
